@@ -42,7 +42,6 @@ def main():
         events = part_1_graph.stream(initial_state, config, stream_mode="values")
     
         for event in events:
-            # print(event)
             _print_event(event, _printed)
 
 if __name__ == "__main__":

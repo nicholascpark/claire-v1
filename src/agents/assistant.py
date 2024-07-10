@@ -24,7 +24,7 @@ class Assistant:
         collected_info = collect_info(state)
         updated_required_info = combine_required_info([state.get("required_information", RequiredInformation()), collected_info["required_information"]])
         state = {**state, "required_information": updated_required_info}
-        # print(updated_required_info.dict())
+        print(updated_required_info.dict())
         if result.tool_calls:
             result = self.process_tool_calls(result, state)
         

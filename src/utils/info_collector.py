@@ -39,9 +39,23 @@ def collect_info(state: ConvoState):
         except ValueError as e:
             state["messages"].append(SystemMessage(content=f"{e} \nInvalid zip code ({result.Zip}), please check again."))
 
+    # If Zip is provided again differently, update the City and State
+    if state.get("required_information") and (result.Zip != state["required_information"].Zip) and (result.City or result.State):
+        try: 
+            city, state_abbr = get_city_state(result.Zip)
+            if city and state_abbr:
+                if city != result.City or state_abbr != result.State:
+                    result.City = city
+                    result.State = state_abbr
+                    state["messages"].append(SystemMessage(content=f"Updated City: {city}, Updated State: {state_abbr}"))
+            else: 
+                state["messages"].append(SystemMessage(content=f"Cannot infer city and state from this zip code ({result.Zip}), please check again."))
+        except ValueError as e:
+            state["messages"].append(SystemMessage(content=f"{e} \nInvalid zip code ({result.Zip}), please check again."))
+
     if "required_information" in state:
         required_info = combine_required_info(
-            info_list=[result, state.get("required_information")]
+            info_list=[state.get("required_information"), result]
         )
     else:
         required_info = result

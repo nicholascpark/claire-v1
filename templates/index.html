@@ -94,6 +94,7 @@
         const userInput = document.getElementById('user-input');
         let awaitingUserInput = false;
         let currentTool = null;
+        let currentToolCallId = null;
     
         socket.on('connect', () => {
             console.log('Connected to server');
@@ -106,7 +107,8 @@
         socket.on('user_input_required', (data) => {
             appendMessage('Claire', data.message);
             awaitingUserInput = true;
-            currentTool = data.tool;
+            currentTool = data.tool_name;
+            currentToolCallId = data.tool_call_id;
         });
     
         function sendMessage() {
@@ -114,9 +116,14 @@
             if (message) {
                 appendMessage('You', message);
                 if (awaitingUserInput) {
-                    socket.emit('user_input_response', {tool: currentTool, response: message});
+                    socket.emit('user_input_response', {
+                        tool_name: currentTool,
+                        response: message,
+                        tool_call_id: currentToolCallId
+                    });
                     awaitingUserInput = false;
                     currentTool = null;
+                    currentToolCallId = null;
                 } else {
                     socket.emit('user_message', message);
                 }
