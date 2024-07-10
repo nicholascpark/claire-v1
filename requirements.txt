@@ -1,0 +1,17 @@
+fastapi[all]
+openai
+langchain
+langchain-openai
+langchain-anthropic
+langchain-community
+python-dotenv
+pydantic
+faiss-cpu
+tiktoken
+numexpr
+langserve
+langgraph
+langchain-groq
+sse_starlette
+pgeocode
+pyodbc
