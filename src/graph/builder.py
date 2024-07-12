@@ -5,7 +5,7 @@ from src.agents.assistant import Assistant
 from src.tools.api_tools import credit_pull_api_tool, lead_create_api_tool
 from src.tools.permission_tools import ask_contact_permission_tool, ask_credit_pull_permission_tool
 from src.tools.savings_estimate_tool import savings_estimate_tool
-from src.utils.update_convo import update_convo_state
+from src.utils.handle_convo import update_convo_state
 from src.utils.misc import create_tool_node_with_fallback
 from src.prompts import primary_assistant_prompt
 from langgraph.graph import END, StateGraph
@@ -53,19 +53,14 @@ def create_graph():
     builder.add_edge("tools", "update_convo_state")
     builder.add_edge("update_convo_state", "assistant")
 
-    memory = MemorySaver()
-    # memory = MSSQLSaver(
-    #     "DRIVER={ODBC Driver 17 for SQL Server};" +
-    #     f"SERVER={os.getenv("SQL_SERVER")};" +
-    #     f"DATABASE={os.getenv("SQL_DATABASE")};" +
-    #     f"UID={os.getenv("SQL_USER")};" +
-    #     F"PWD={os.getenv("SQL_PASSWORD")};" +
-    #     "TrustServerCertificate=yes;"  # Add this if you encounter SSL certificate issues
-    # )
-    # try:
-    #     memory.create_tables()
-    # except pyodbc.Error as e:
-    #     print(f"An error occurred while creating MS SQL table: {e}")
+    conn_string = (
+        "DRIVER={ODBC Driver 17 for SQL Server};"
+        "SERVER=STGDBCOA;"
+        "DATABASE=ChatBot;"
+        "UID=svcChatBot;"
+        "PWD=@HMdc2wGpWEx;"
+    )
+    memory = MSSQLSaver(conn_string)
 
     return builder.compile(checkpointer=memory,)# interrupt_after=["api_tools"]    )
 

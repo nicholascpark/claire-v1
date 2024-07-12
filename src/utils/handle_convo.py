@@ -1,6 +1,8 @@
 import json
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableLambda
+from src.utils.info_collector import check_all_required_info
+from typing import Dict
 
 def update_convo_state(state: dict):
     messages = state.get("messages", [])
@@ -45,5 +47,37 @@ def update_convo_state(state: dict):
     print(state["lead_create_complete"])
     print(state["savings_estimate"])
     return state
+
+
+def handle_contact_permission(conversation_state, response: str) -> Dict[str, bool]:
+    if not check_all_required_info(conversation_state):
+        return {"message": "Collect the list of required information first."}
+    
+    if conversation_state.get("contact_permission") is not None:
+        return {"message": "Contact permission already obtained. Move on to the next tool."}
+    
+    if response in ['y', 'yes']:
+        return {"contact_permission": True}
+    elif response in ['n', 'no']:
+        return {"contact_permission": False, "message": "User has not given permission to be contacted. We cannot proceed without the contact permission."}
+    else:
+        return {"message": "Invalid input. Please answer with 'yes/y' or 'no/n'."}
+
+def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str, bool]:
+    if not check_all_required_info(conversation_state):
+        return {"message": "Collect the list of required information first."}
+    
+    if not conversation_state.get("contact_permission"):
+        return {"message": "Obtain the contact permission first."}
+    
+    if conversation_state.get("credit_pull_permission") is not None:
+        return {"message": "Credit pull permission already obtained. Move on to the next tool."}
+
+    if response in ['y', 'yes']:
+        return {"credit_pull_permission": True}
+    elif response in ['n', 'no']:
+        return {"credit_pull_permission": False}
+    else:
+        return {"message": "Invalid input. Please answer with 'yes/y' or 'no/n'."}
 
 update_convo_state = RunnableLambda(update_convo_state)

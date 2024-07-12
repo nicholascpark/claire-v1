@@ -12,5 +12,5 @@ CLEARONE_LEADS_API_KEY = os.getenv("CLEARONE_LEADS_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature = 0, max_tokens = 1000)
+llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature = 0, max_tokens = 1000)#, api_key = OPENAI_API_KEY)
 # llm = CustomChatAnthropic(model = "claude-3-haiku-20240307", temperature = 0, max_tokens = 1000, api_key = ANTHROPIC_API_KEY)

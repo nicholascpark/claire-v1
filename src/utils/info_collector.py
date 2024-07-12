@@ -75,3 +75,7 @@ def combine_required_info(info_list: List[RequiredInformation]) -> RequiredInfor
             if value is not None:
                 combined_info[key] = value
     return RequiredInformation(**combined_info)
+
+def check_all_required_info(state) -> bool:
+    required_info = state.get("required_information", {})
+    return all(required_info.get(field) is not None for field in required_info)
