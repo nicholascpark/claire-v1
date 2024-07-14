@@ -58,9 +58,7 @@ if __name__ == "__main__":
     )
     mssql_saver = MSSQLSaver(your_connection_string)
     # mssql_saver.reset_table()
-    thread_id = "23cc2ab9-0474-40c5-9045-1161c3734366"  # Example thread_id from your image
-    conversation_history = mssql_saver.process_checkpoint(thread_id)
-    print(conversation_history)
-
-    # for message in conversation_history:
-    #     print(f"Role: {message['role']}, Content: {message['content']}")
+    thread_id = "e69d02fa-f4ae-490e-b5e6-26f61d54093f" 
+    conversation_history = mssql_saver.get_conversation_history(thread_id)
+    parsed_history = mssql_saver.parse_and_print_conversation_history(conversation_history)
+    print(parsed_history)

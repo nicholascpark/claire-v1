@@ -14,10 +14,11 @@ from contextlib import AbstractContextManager, contextmanager
 from hashlib import md5
 from types import TracebackType
 from typing import Any, AsyncIterator, Dict, Iterator, Optional, Sequence, Tuple, List
-
+from datetime import datetime, timezone
 from langchain_core.runnables import RunnableConfig
 from typing_extensions import Self
 from langgraph.errors import EmptyChannelError
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
 from langgraph.channels.base import BaseChannel
 from langgraph.checkpoint.base import (
@@ -273,6 +274,7 @@ class MSSQLSaver(BaseCheckpointSaver):
                 serialized_data = row[0]
                 deserialized_data = self.serde.loads(serialized_data)
                 print("deserialized:", deserialized_data)
+                return deserialized_data
                 
                 # Assuming the conversation history is stored in a specific format
                 # You might need to adjust this based on your actual data structure
@@ -324,3 +326,65 @@ class MSSQLSaver(BaseCheckpointSaver):
             conn.commit()
         self.is_setup = True
         print("checkpoints_data table has been recreated.")
+
+
+    def parse_and_print_conversation_history(self, deserialized_data: Dict[str, Any]) -> None:
+        messages = deserialized_data.get('channel_values', {}).get('messages', [])
+        
+        print("Conversation History:")
+        print("====================")
+        
+        for message in messages:
+            if hasattr(message, 'content') and hasattr(message, 'id'):
+                # Determine message type
+                msg_type = type(message).__name__
+                
+                print(f"Type: {msg_type}")
+                print(f"Content: {message.content}")
+                print(f"ID: {message.id}")
+                
+                # Extract timestamp from id for all messages
+                if message.id.startswith('run-'):
+                    timestamp_str = message.id.split('-')[1]
+                    try:
+                        timestamp = datetime.strptime(timestamp_str, '%Y%m%d%H%M%S').replace(tzinfo=timezone.utc)
+                        print(f"Timestamp: {timestamp.isoformat()}")
+                    except ValueError:
+                        pass
+                
+                if msg_type == 'AIMessage':
+                    response_metadata = getattr(message, 'response_metadata', {})
+                    if 'model_name' in response_metadata:
+                        print(f"Model: {response_metadata['model_name']}")
+                    
+                    usage_metadata = getattr(message, 'usage_metadata', {})
+                    if usage_metadata:
+                        print(f"Token Usage: {usage_metadata}")
+                    
+                    # Print tool calls if any
+                    tool_calls = getattr(message, 'tool_calls', [])
+                    if tool_calls:
+                        print("Tool Calls:")
+                        for call in tool_calls:
+                            print(f"  - Function: {call.get('function', {}).get('name')}")
+                            print(f"    Arguments: {call.get('function', {}).get('arguments')}")
+                    
+                    # Check for additional_kwargs for tool calls
+                    additional_kwargs = getattr(message, 'additional_kwargs', {})
+                    if 'tool_calls' in additional_kwargs:
+                        print("Tool Calls (from additional_kwargs):")
+                        for call in additional_kwargs['tool_calls']:
+                            print(f"  - Function: {call.get('function', {}).get('name')}")
+                            print(f"    Arguments: {call.get('function', {}).get('arguments')}")
+                
+                print()  # Empty line for readability between messages
+
+        # Print additional information
+        required_info = deserialized_data.get('channel_values', {}).get('required_information')
+        if required_info:
+            print("Required Information:")
+            print("=====================")
+            for key, value in required_info.__dict__.items():
+                if value is not None:
+                    print(f"{key}: {value}")
+            print()
