@@ -55,10 +55,10 @@ def create_graph():
 
     conn_string = (
         "DRIVER={ODBC Driver 17 for SQL Server};"
-        "SERVER=STGDBCOA;"
-        "DATABASE=ChatBot;"
-        "UID=svcChatBot;"
-        "PWD=@HMdc2wGpWEx;"
+        f"SERVER={os.getenv("SQL_SERVER")};"
+        f"DATABASE={os.getenv("SQL_DATABASE")};"
+        f"UID={os.getenv("SQL_USERNAME")};"
+        f"PWD={os.getenv("SQL_PWD")};"
     )
     memory = MSSQLSaver(conn_string)
 

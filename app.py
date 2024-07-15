@@ -8,7 +8,7 @@ from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 from src.utils.handle_convo import handle_contact_permission, handle_credit_pull_permission
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SECRET_KEY'] = '1234'
 socketio = SocketIO(app)
 
 part_1_graph = create_graph()
