@@ -60,5 +60,6 @@ if __name__ == "__main__":
     # mssql_saver.reset_table()
     thread_id = "e69d02fa-f4ae-490e-b5e6-26f61d54093f" 
     conversation_history = mssql_saver.get_conversation_history(thread_id)
+    # print(conversation_history)
     parsed_history = mssql_saver.parse_and_print_conversation_history(conversation_history)
-    print(parsed_history)
+    # print(parsed_history)

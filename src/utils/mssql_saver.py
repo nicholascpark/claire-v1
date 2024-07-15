@@ -268,12 +268,11 @@ class MSSQLSaver(BaseCheckpointSaver):
                 (thread_id,)
             )
             row = cursor.fetchone()
-            print(row)
+            # print(row)
             
             if row and row[0]:
                 serialized_data = row[0]
                 deserialized_data = self.serde.loads(serialized_data)
-                print("deserialized:", deserialized_data)
                 return deserialized_data
                 
                 # Assuming the conversation history is stored in a specific format
