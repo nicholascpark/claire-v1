@@ -38,12 +38,12 @@ def handle_connect():
         user_input="",
         messages=[AIMessage(content=initial_message)],
         required_information=RequiredInformation(),
-        # contact_permission = None,
-        # credit_pull_permission = None,
-        # credit_pull_complete = None,
-        # lead_create_complete = None,
-        # savings_estimate = None,
-        # reason_for_decline = None
+        contact_permission = None,
+        credit_pull_permission = None,
+        credit_pull_complete = None,
+        lead_create_complete = None,
+        savings_estimate = None,
+        reason_for_decline = None
     )
     emit('bot_response', {'message': initial_message})
 
@@ -61,8 +61,8 @@ def handle_message(message):
     
     conversation_state["user_input"] = message
     conversation_state["messages"].append(HumanMessage(content=message))
-    process_message(conversation_state)
-    session['conversation_state'] = conversation_state
+    updated_state = process_message(conversation_state)
+    session['conversation_state'] = updated_state
 
 @socketio.on('user_input_response')
 def handle_user_input_response(data):
@@ -81,6 +81,7 @@ def handle_user_input_response(data):
         result = handle_credit_pull_permission(conversation_state, user_response)
     else:
         emit('bot_response', {'message': "Unknown tool called."})
+        session['conversation_state'] = conversation_state
         return
 
     if result.get("message"):
@@ -98,11 +99,11 @@ def handle_user_input_response(data):
     conversation_state["user_input"] = user_response
     conversation_state["messages"].append(tool_message)
     conversation_state.update(result)
-    process_message(conversation_state)
-    session['conversation_state'] = conversation_state
+    updated_state = process_message(conversation_state)
+    session['conversation_state'] = updated_state
 
 def process_message(state):
-    print("Process Message Required Information:", state.get("messages"))
+    print("Process Message Required Information:", state.get("required_information").dict())
     events = part_1_graph.stream(state, config, stream_mode="values")
     
     for event in events:
@@ -127,10 +128,9 @@ def process_message(state):
                                         'message': question
                                     }
                                     state["messages"].append(message)
-                                    session['conversation_state'] = state  # Save state after appending message
                                     _print_event(event, _printed)
                                     socketio.emit('user_input_required', latest_tool_call)
-                                    return
+                                    return state
                                 else:
                                     socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."})
                             if tool_name == "AskCreditPullPermissionTool":
@@ -142,17 +142,22 @@ def process_message(state):
                                         'message': question
                                     }
                                     state["messages"].append(message)
-                                    session['conversation_state'] = state  # Save state after appending message
                                     _print_event(event, _printed)
                                     socketio.emit('user_input_required', latest_tool_call)
-                                    return
+                                    return state
                                 else:
                                     socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."})
 
         _print_event(event, _printed)
+        
+        # Update the state with any new information from the event
+        for key in ['required_information', 'contact_permission', 'credit_pull_permission', 
+                    'credit_pull_complete', 'lead_create_complete', 'savings_estimate', 'reason_for_decline']:
+            if key in event:
+                state[key] = event[key]
 
     state["messages"].append(message)
-    session['conversation_state'] = state  # Final save of state
+    return state
 
 def generate_initial_message():
     initial_state = ConvoState(

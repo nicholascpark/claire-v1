@@ -154,6 +154,7 @@
         function formatMessage(message) {
             if (typeof message === 'string') {
                 message = message.replace(/\n/g, '<br>');
+                message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 if (message.match(/(\s*)[•\-]\s+(.+)(?=(<br>|$))/g)) {
                     let lines = message.split('<br>');
                     let formattedLines = lines.map(line => {
