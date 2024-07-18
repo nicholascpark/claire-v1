@@ -15,6 +15,8 @@ from src.utils.mssql_saver import MSSQLSaver
 from src.config import llm
 import pyodbc
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # llm = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature = 0, max_tokens = 1000)
 

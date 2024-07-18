@@ -1,4 +1,5 @@
-fastapi[all]
+flask
+flask_socketio
 openai
 langchain
 langchain-openai
@@ -11,7 +12,8 @@ tiktoken
 numexpr
 langserve
 langgraph
-langchain-groq
 sse_starlette
 pgeocode
 pyodbc
+gunicorn
+eventlet

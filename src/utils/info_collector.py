@@ -77,5 +77,7 @@ def combine_required_info(info_list: List[RequiredInformation]) -> RequiredInfor
     return RequiredInformation(**combined_info)
 
 def check_all_required_info(state) -> bool:
-    required_info = state.get("required_information", {})
-    return all(required_info.get(field) is not None for field in required_info)
+    # print("state:", state)
+    required_info = state["required_information"]
+    # print("Checking required information: ", required_info)
+    return required_info.all_fields_not_none()

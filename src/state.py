@@ -15,13 +15,16 @@ class RequiredInformation(BaseModel):
     Address: Optional[str] = Field(description="the provided address of the user")
     DateOfBirth: Optional[str] = Field(description="the provided date of birth of the user")
 
+    def all_fields_not_none(self) -> bool:
+        return all(value is not None for value in self.dict().values())
+
 class ConvoState(TypedDict):
     user_input: str
     messages: Annotated[list[AnyMessage], add_messages]
     required_information: RequiredInformation
-    contact_permission: bool
-    credit_pull_permission: bool
-    credit_pull_complete: bool
-    lead_create_complete: bool
-    savings_estimate: dict
+    contact_permission: Optional[bool]
+    credit_pull_permission: Optional[bool]
+    credit_pull_complete: Optional[bool]
+    lead_create_complete: Optional[bool]
+    savings_estimate: Optional[dict]
     reason_for_decline: Optional[str]

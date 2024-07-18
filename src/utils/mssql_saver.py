@@ -28,6 +28,9 @@ from langgraph.checkpoint.base import (
     CheckpointTuple,
     SerializerProtocol,
 )
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 class MSSQLSaver(BaseCheckpointSaver):
     """A checkpoint saver that stores checkpoints in a Microsoft SQL Server database."""
@@ -41,7 +44,13 @@ class MSSQLSaver(BaseCheckpointSaver):
         serde: Optional[SerializerProtocol] = None,
     ) -> None:
         super().__init__(serde=serde)
-        self.conn_string = conn_string
+        self.conn_string = (
+            "DRIVER={ODBC Driver 17 for SQL Server};"
+            f"SERVER={os.getenv("SQL_SERVER")};"
+            f"DATABASE={os.getenv("SQL_DATABASE")};"
+            f"UID={os.getenv("SQL_USERNAME")};"
+            f"PWD={os.getenv("SQL_PWD")};"
+        )
         self.is_setup = False
         self.lock = threading.Lock()
 

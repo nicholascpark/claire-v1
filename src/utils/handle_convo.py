@@ -54,16 +54,18 @@ def handle_contact_permission(conversation_state, response: str) -> Dict[str, bo
         return {"message": "Collect the list of required information first."}
     
     if conversation_state.get("contact_permission") is not None:
-        return {"message": "Contact permission already obtained. Move on to the next tool."}
+        return {"message": "Contact permission already obtained."}
     
     if response in ['y', 'yes']:
         return {"contact_permission": True}
     elif response in ['n', 'no']:
-        return {"contact_permission": False, "message": "User has not given permission to be contacted. We cannot proceed without the contact permission."}
+        return {"contact_permission": False}
     else:
-        return {"message": "Invalid input. Please answer with 'yes/y' or 'no/n'."}
+        return {"message": "Invalid input. Do you give permission for us to contact you through email or phone number provided?* (Please type: yes/y/no/n)"}
 
 def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str, bool]:
+
+    print("check_all_required_info(conversation_state):", check_all_required_info(conversation_state))
     if not check_all_required_info(conversation_state):
         return {"message": "Collect the list of required information first."}
     
@@ -78,6 +80,6 @@ def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str
     elif response in ['n', 'no']:
         return {"credit_pull_permission": False}
     else:
-        return {"message": "Invalid input. Please answer with 'yes/y' or 'no/n'."}
+        return {"message": "Invalid input. Do you give permission for us to perform a soft pull on your credit profile? This will NOT affect your credit score.** (Please type: yes/y/no/n)"}
 
 update_convo_state = RunnableLambda(update_convo_state)
