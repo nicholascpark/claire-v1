@@ -14,6 +14,6 @@ langserve
 langgraph
 sse_starlette
 pgeocode
-pyodbc==4.0.32
+pyodbc
 gunicorn
 eventlet
