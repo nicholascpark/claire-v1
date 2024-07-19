@@ -4,6 +4,9 @@ from src.state import RequiredInformation
 
 def calculate_savings_estimate(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
+    if inputs.get("credit_pull_complete") is None:
+        return {"message": "Need to complete the credit pull tool first."}
+
     if inputs.get("lead_create_complete") is None:
         return {"message": "Cannot calculate savings estimate without creating a lead first."}
     

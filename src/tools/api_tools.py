@@ -13,7 +13,8 @@ def run_credit_pull_api(inputs) -> Dict[str, Any]:
     response = requests.post(
         "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
         json=request_data,
-        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
+        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"},
+        verify=False
     )
     
     try:
@@ -22,6 +23,8 @@ def run_credit_pull_api(inputs) -> Dict[str, Any]:
         print(f'HTTP error occurred: {err}')  
     except Exception as err:
         print(f'Other error occurred: {err}')   
+
+    print("Status Code:", response.status_code)
         
     return response.json()
 
@@ -38,7 +41,8 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
     response = requests.post(
         "https://carbon.clearoneadvantage.com/api/lead/create?detailedResponse=true",
         json=request_data,
-        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
+        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"},
+        verify=False
     )
 
     try:
@@ -47,6 +51,8 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
         print(f'HTTP error occurred: {err}')
     except Exception as err:
         print(f'Other error occurred: {err}')   
+
+    print("Status Code:", response.status_code)
 
     result = response.json()
 
