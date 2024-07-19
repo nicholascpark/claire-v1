@@ -15,7 +15,7 @@ def ask_contact_permission(inputs) -> Dict[str, bool]:
         return {"message": "Already done. Move on to the next tool."}
     
     while all_info_filled and inputs.get("contact_permission") is None:
-        response = input("TV: Do you give permission for us to contact you through email or phone number provided? (Please type: yes/y/no/n): ").lower()
+        response = input("TCPA Consent: Do you give permission for us to contact you through email or phone number provided? (Please type: yes/y or no/n): ").lower()
         if response in ['y', 'yes']:
             return {"contact_permission": True}
         elif response in ['n', 'no']:
@@ -38,7 +38,7 @@ def ask_credit_pull_permission(inputs) -> Dict[str, bool]:
         return {"message": "Already done. Move on to the next tool."}
 
     while all_info_filled and inputs.get("credit_pull_permission") is None and inputs.get("contact_permission"):         
-        response = input("TV: Do you give permission for us to pull your credit? This will NOT affect your credit score. (Please type: yes/y/no/n): ").lower()
+        response = input("Credit Pull Consent: Do you give permission for us to pull your credit? This will NOT affect your credit score. (Please type: yes/y or no/n): ").lower()
         if response in ['y', 'yes']:
             return {"credit_pull_permission": True}
         elif response in ['n', 'no']:

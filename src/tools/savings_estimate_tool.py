@@ -28,11 +28,11 @@ def calculate_savings_estimate(inputs: Dict[str, Any]) -> Dict[str, Any]:
         program_length = round(((debt - savings) / payment) / 12, 1)
 
         return {
-            "debt": debt,
-            "savings": savings,
-            "payment": payment,
-            "settlement": settlement,
-            "program_length": program_length
+            "debt": "$" + str(debt),
+            "savings": "$" + str(savings),
+            "payment": "$" + str(payment),
+            "settlement": "$" + str(settlement),
+            "program_length": str(program_length) + " years"
         }
     else:
         return {"message": "Provide the required information and complete the credit pull and lead creation tools first."}

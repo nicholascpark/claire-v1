@@ -121,7 +121,7 @@ def process_message(state):
                             tool_call_id = tool_call["id"]
                             if tool_name == "AskContactPermissionTool":
                                 if check_all_required_info(state) and state.get("contact_permission") is None:
-                                    question = "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes/y/no/n)"
+                                    question = "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes/y or no/n)"
                                     latest_tool_call = {
                                         'tool_name': tool_name,
                                         'tool_call_id': tool_call_id,
@@ -135,7 +135,7 @@ def process_message(state):
                                     socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."})
                             if tool_name == "AskCreditPullPermissionTool":
                                 if check_all_required_info(state) and state.get("contact_permission") and state.get("credit_pull_permission") is None:
-                                    question = "Do you give permission for us to perform a soft pull on your credit profile? This will NOT affect your credit score.** (Please type: yes/y/no/n)"
+                                    question = "Do you give permission for us to perform a soft pull on your credit profile? This will NOT affect your credit score.** (Please type: yes/y or no/n)"
                                     latest_tool_call = {
                                         'tool_name': tool_name,
                                         'tool_call_id': tool_call_id,
@@ -172,7 +172,7 @@ def generate_initial_message():
                 if isinstance(msg, AIMessage):
                     return msg.content
     
-    return "Hello! I'm Claire, a debt resolution specialist at ClearOne Advantage. How can I assist you today?"
+    return "Hello! I'm Claire, a debt resolution specialist at ClearOne Advantage. How can I assist you today? May I have your first name to get started?"
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))

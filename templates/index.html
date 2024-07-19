@@ -22,6 +22,8 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         .chat-header {
             background-color: white;
@@ -42,11 +44,48 @@
             overflow-y: auto;
             padding: 20px;
             background-color: #f9f9f9;
+            flex-grow: 1;
         }
+
+        .typing-indicator-area {
+            height: 56px; /* Fixed height to reserve space */
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #typing-indicator {
+            display: none;
+            align-items: center;
+            padding: 5px 20px;
+            color: #666;
+            height: 100%;
+        }
+
+        #typing-indicator .spinner {
+            width: 22px;
+            height: 22px;
+            margin-right: 10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #5c5d5f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #typing-indicator span {
+            font-size: 16px;
+        }
+
         .input-area {
             display: flex;
-            padding: 20px;
+            padding: 10px;
+            background-color: white;
         }
+
         #user-input {
             flex-grow: 1;
             padding: 10px;
@@ -74,6 +113,7 @@
             padding-left: 20px;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 </head>
 <body>
     <div class="chat-wrapper">
@@ -82,6 +122,12 @@
             <!-- <h1>Chat with Claire</h1> -->
         </div>
         <div id="chat-container"></div>
+        <div class="typing-indicator-area">
+            <div id="typing-indicator">
+                <div class="spinner"></div>
+                <span>Claire is typing...</span>
+            </div>
+        </div>
         <div class="input-area">
             <input type="text" id="user-input" placeholder="Type your message...">
             <button onclick="sendMessage()">Send</button>
@@ -92,6 +138,7 @@
         const socket = io();
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
+        const typingIndicator = document.getElementById('typing-indicator');
         let awaitingUserInput = false;
         let currentTool = null;
         let currentToolCallId = null;
@@ -101,10 +148,12 @@
         });
     
         socket.on('bot_response', (data) => {
+            hideTypingIndicator();
             appendMessage('Claire', data.message);
         });
     
         socket.on('user_input_required', (data) => {
+            hideTypingIndicator();
             appendMessage('Claire', data.message);
             awaitingUserInput = true;
             currentTool = data.tool_name;
@@ -115,6 +164,7 @@
             const message = userInput.value.trim();
             if (message) {
                 appendMessage('You', message);
+                showTypingIndicator();
                 if (awaitingUserInput) {
                     socket.emit('user_input_response', {
                         tool_name: currentTool,
@@ -129,6 +179,14 @@
                 }
                 userInput.value = '';
             }
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.style.display = 'flex';
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.style.display = 'none';
         }
     
         function quitChat() {

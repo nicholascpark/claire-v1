@@ -61,7 +61,7 @@ def handle_contact_permission(conversation_state, response: str) -> Dict[str, bo
     elif response in ['n', 'no']:
         return {"contact_permission": False}
     else:
-        return {"message": "Invalid input. Do you give permission for us to contact you through email or phone number provided?* (Please type: yes/y/no/n)"}
+        return {"message": "Invalid input. Do you give permission for us to contact you through email or phone number provided?* (Please type: yes/y or no/n)"}
 
 def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str, bool]:
 
@@ -80,6 +80,4 @@ def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str
     elif response in ['n', 'no']:
         return {"credit_pull_permission": False}
     else:
-        return {"message": "Invalid input. Do you give permission for us to perform a soft pull on your credit profile? This will NOT affect your credit score.** (Please type: yes/y/no/n)"}
-
-update_convo_state = RunnableLambda(update_convo_state)
+        return {"message": "Invalid input. Do you give permission for us to perform a soft pull on your credit profile? This will NOT affect your credit score.** (Please type: yes/y or no/n)"}
