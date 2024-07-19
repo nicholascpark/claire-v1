@@ -37,7 +37,7 @@ class Assistant:
         # required_info = state.get("required_information", RequiredInformation())
         # all_info_filled = all(getattr(required_info, field) is not None for field in required_info.__fields__)
         
-        print("Result before:", result)
+        # print("Result before:", result)
 
         new_tool_calls = []
         for tool_call in result.tool_calls:
@@ -49,7 +49,8 @@ class Assistant:
         
         result.tool_calls = new_tool_calls
         
-        print("Result after:", result)
+        print("Modify with:", modify_with)
+        # print("Result after:", result)
 
         return result
 

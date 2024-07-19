@@ -14,7 +14,7 @@ def run_credit_pull_api(inputs) -> Dict[str, Any]:
         "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
         json=request_data,
         headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"},
-        verify=False
+        # verify=False
     )
     
     try:
@@ -42,7 +42,7 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
         "https://carbon.clearoneadvantage.com/api/lead/create?detailedResponse=true",
         json=request_data,
         headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"},
-        verify=False
+        # verify=False
     )
 
     try:

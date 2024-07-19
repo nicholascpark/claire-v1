@@ -103,7 +103,7 @@ def handle_user_input_response(data):
     session['conversation_state'] = updated_state
 
 def process_message(state):
-    print("Process Message Required Information:", state.get("required_information").dict())
+    # print("Process Message Required Information:", state.get("required_information").dict())
     events = part_1_graph.stream(state, config, stream_mode="values")
     
     for event in events:
