@@ -1,18 +1,14 @@
-from langchain_core.tools import Tool
+from langchain_core.tools import Tool, StructuredTool
 from typing import Dict, Any
 import requests
 import os
 
-def run_credit_pull_api(inputs, *args) -> Dict[str, Any]:
-
-    print("------------------ Credit Pull API Tool ------------------")
-    print("tool args:", args)
-    print("------------------ Credit Pull API Tool ------------------")
+def run_credit_pull_api(inputs) -> Dict[str, Any]:
 
     if not inputs.get("credit_pull_permission"):
         return {"message": "Please obtain credit pull permission first."}
 
-    request_data = inputs["required_information"] if "required_information" in inputs else inputs #######
+    request_data = inputs["required_information"] # if "required_information" in inputs else inputs #######
     # Make the POST request
     response = requests.post(
         "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
@@ -62,7 +58,7 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
 
     return result
 
-class CreditPullAPITool(Tool):
+class CreditPullAPITool(StructuredTool):
     name: str = "CreditPullAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to pull the customer's credit report."
     func = run_credit_pull_api
@@ -83,7 +79,7 @@ class CreditPullAPITool(Tool):
             # Handle other errors
             raise ValueError(f"An error occurred: {str(e)}")
         
-class LeadCreateAPITool(Tool):
+class LeadCreateAPITool(StructuredTool):
     name: str = "LeadCreateAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to create a new lead in Salesforce."
     func = run_lead_create_api
