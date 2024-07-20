@@ -66,8 +66,8 @@ class CreditPullAPITool(Tool):
             # Handle string input if necessary
             tool_input = {"required_information": tool_input[0]}
         try:
-            required_info = tool_input.get("required_information", tool_input)
-            results = run_credit_pull_api(required_info)
+            # required_info = tool_input.get("required_information", tool_input)
+            results = run_credit_pull_api(tool_input)
             print("Credit Pull Response:", results)
             return results
         except requests.RequestException as e:
@@ -89,8 +89,8 @@ class LeadCreateAPITool(Tool):
             tool_input = {"required_information": tool_input[0]}
         
         try:
-            required_info = tool_input.get("required_information", tool_input)
-            results = run_lead_create_api(required_info)
+            # required_info = tool_input.get("required_information", tool_input)
+            results = run_lead_create_api(tool_input)
             print("Lead Create Response:", results)
             return results
         except requests.RequestException as e:
