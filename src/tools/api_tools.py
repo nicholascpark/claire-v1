@@ -3,12 +3,12 @@ from typing import Dict, Any
 import requests
 import os
 
-def run_credit_pull_api(inputs) -> Dict[str, Any]:
+def run_credit_pull_api(inputs, *args) -> Dict[str, Any]:
 
     if not inputs.get("credit_pull_permission"):
         return {"message": "Please obtain credit pull permission first."}
 
-    request_data = inputs["required_information"]
+    request_data = inputs["required_information"] if "required_information" in inputs else inputs #######
     # Make the POST request
     response = requests.post(
         "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",

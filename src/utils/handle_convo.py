@@ -39,14 +39,14 @@ def update_convo_state(state: dict):
             except json.JSONDecodeError:
                 continue
 
-    print("Updated state: \n")
-    print("Required Information:", state.get("required_information").dict())
-    print("Contact Permission:", state.get("contact_permission"))
-    print("Credit Pull Permission:", state.get("credit_pull_permission"))
-    print("Credit Pull Complete:", state.get("credit_pull_complete"))
-    print("Lead Create Complete:", state.get("lead_create_complete"))
-    print("Savings Estimate:", state.get("savings_estimate"))
-    print("Reason for Decline:", state.get("reason_for_decline"))
+    # print("Updated state: \n")
+    # print("Required Information:", state.get("required_information").dict())
+    # print("Contact Permission:", state.get("contact_permission"))
+    # print("Credit Pull Permission:", state.get("credit_pull_permission"))
+    # print("Credit Pull Complete:", state.get("credit_pull_complete"))
+    # print("Lead Create Complete:", state.get("lead_create_complete"))
+    # print("Savings Estimate:", state.get("savings_estimate"))
+    # print("Reason for Decline:", state.get("reason_for_decline"))
     return state
 
 
