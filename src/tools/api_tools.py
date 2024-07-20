@@ -5,6 +5,10 @@ import os
 
 def run_credit_pull_api(inputs, *args) -> Dict[str, Any]:
 
+    print("------------------ Credit Pull API Tool ------------------")
+    print("tool args:", args)
+    print("------------------ Credit Pull API Tool ------------------")
+
     if not inputs.get("credit_pull_permission"):
         return {"message": "Please obtain credit pull permission first."}
 
