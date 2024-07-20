@@ -1,22 +1,19 @@
-from langchain_core.tools import Tool, StructuredTool
-from typing import Dict, Any, Optional, List
-from pydantic import BaseModel, Field
+from langchain_core.tools import Tool
+from typing import Dict, Any
 import requests
 import os
-from src.state import ConvoState, RequiredInformation
 
 def run_credit_pull_api(inputs) -> Dict[str, Any]:
 
     if not inputs.get("credit_pull_permission"):
         return {"message": "Please obtain credit pull permission first."}
 
-    request_data = inputs["required_information"] # if "required_information" in inputs else inputs #######
+    request_data = inputs["required_information"]
     # Make the POST request
     response = requests.post(
         "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
         json=request_data,
-        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"},
-        # verify=False
+        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
     )
     
     try:
@@ -26,7 +23,7 @@ def run_credit_pull_api(inputs) -> Dict[str, Any]:
     except Exception as err:
         print(f'Other error occurred: {err}')   
 
-    print("Status Code:", response.status_code)
+    print("Credit Pull Status Code:", response.status_code)
         
     return response.json()
 
@@ -43,8 +40,7 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
     response = requests.post(
         "https://carbon.clearoneadvantage.com/api/lead/create?detailedResponse=true",
         json=request_data,
-        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"},
-        # verify=False
+        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
     )
 
     try:
@@ -54,21 +50,22 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
     except Exception as err:
         print(f'Other error occurred: {err}')   
 
-    print("Status Code:", response.status_code)
-
     result = response.json()
+
+    print("Lead Create Status Code:", response.status_code)
 
     return result
 
-class CreditPullAPITool(StructuredTool):
+class CreditPullAPITool(Tool):
     name: str = "CreditPullAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to pull the customer's credit report."
     func = run_credit_pull_api
     
-    def __call__(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    # def __call__(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    def __call__(self, input_data, *args) -> Dict[str, Any]:
         try:
             # Call the function with the input data
-            required_info = input_data["required_information"]
+            required_info = input_data["required_information"] if "required_information" in input_data else input_data
             results = self.func(required_info)
             print("Credit Pull Response:", results)
             return results
@@ -81,15 +78,15 @@ class CreditPullAPITool(StructuredTool):
             # Handle other errors
             raise ValueError(f"An error occurred: {str(e)}")
         
-class LeadCreateAPITool(StructuredTool):
+class LeadCreateAPITool(Tool):
     name: str = "LeadCreateAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to create a new lead in Salesforce."
     func = run_lead_create_api
 
-    def __call__(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    def __call__(self, input_data, *args) -> Dict[str, Any]:
         try:
             # Call the function with the input data
-            required_info = input_data["required_information"]
+            required_info = input_data["required_information"] if "required_information" in input_data else input_data
             results = self.func(required_info)
             print("Lead Create Response:", results)
             return results
@@ -102,29 +99,15 @@ class LeadCreateAPITool(StructuredTool):
             # Handle other errors
             raise ValueError(f"An error occurred: {str(e)}")
         
-class ConvoStateModel(BaseModel):
-    user_input: str = Field(description="User input from the chat.")
-    messages: List = Field(description="List of messages exchanged between the user and the bot.")
-    required_information: RequiredInformation = Field(description="Required information collected from the user.")
-    contact_permission: Optional[bool] = Field(description="User's permission to contact them.")
-    credit_pull_permission: Optional[bool] = Field(description="User's permission to pull their credit report.")
-    credit_pull_complete: Optional[bool] = Field(description="Flag to indicate if the credit pull is complete.")
-    lead_create_complete: Optional[bool] = Field(description="Flag to indicate if the lead creation is complete.")
-    savings_estimate: Optional[dict] = Field(description="Savings estimate for the customer.")
-    reason_for_decline: Optional[str] = Field(description="Reason for declining the customer.")
-
 # Usage example
-credit_pull_api_tool = StructuredTool.from_function(
+credit_pull_api_tool = CreditPullAPITool(
         name="CreditPullAPI",
         description="Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to pull the customer's credit report.",
-        func=run_credit_pull_api,
-        # args_schema=ConvoStateModel
+        func=run_credit_pull_api
         )
 
-lead_create_api_tool = StructuredTool.from_function(
+lead_create_api_tool = LeadCreateAPITool(
         name="LeadCreateAPI",
         description="Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to create a new lead in Salesforce.",
-        func=run_lead_create_api,
-        # args_schema=ConvoStateModel
+        func=run_lead_create_api
         )
-
