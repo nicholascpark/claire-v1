@@ -1,6 +1,6 @@
 from langchain_core.tools import Tool, StructuredTool
 from typing import Dict, Any, Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import requests
 import os
 from src.state import ConvoState, RequiredInformation
@@ -103,15 +103,15 @@ class LeadCreateAPITool(StructuredTool):
             raise ValueError(f"An error occurred: {str(e)}")
         
 class ConvoStateModel(BaseModel):
-    user_input: str
-    messages: List
-    required_information: RequiredInformation
-    contact_permission: Optional[bool]
-    credit_pull_permission: Optional[bool]
-    credit_pull_complete: Optional[bool]
-    lead_create_complete: Optional[bool]
-    savings_estimate: Optional[dict]
-    reason_for_decline: Optional[str]
+    user_input: str = Field(description="User input from the chat.")
+    messages: List = Field(description="List of messages exchanged between the user and the bot.")
+    required_information: RequiredInformation = Field(description="Required information collected from the user.")
+    contact_permission: Optional[bool] = Field(description="User's permission to contact them.")
+    credit_pull_permission: Optional[bool] = Field(description="User's permission to pull their credit report.")
+    credit_pull_complete: Optional[bool] = Field(description="Flag to indicate if the credit pull is complete.")
+    lead_create_complete: Optional[bool] = Field(description="Flag to indicate if the lead creation is complete.")
+    savings_estimate: Optional[dict] = Field(description="Savings estimate for the customer.")
+    reason_for_decline: Optional[str] = Field(description="Reason for declining the customer.")
 
 # Usage example
 credit_pull_api_tool = CreditPullAPITool(
