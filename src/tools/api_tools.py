@@ -1,5 +1,5 @@
 from langchain_core.tools import Tool
-from typing import Dict, Any
+from typing import Dict, Any, List, Union
 import requests
 import os
 
@@ -56,48 +56,51 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
 
     return result
 
+
 class CreditPullAPITool(Tool):
     name: str = "CreditPullAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to pull the customer's credit report."
-    func = run_credit_pull_api
     
-    # def __call__(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
-    def __call__(self, input_data, *args) -> Dict[str, Any]:
+    def _run(self, tool_input: Union[List, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+        if isinstance(tool_input, list) and "Debt" in tool_input[0]:
+            # Handle string input if necessary
+            tool_input = {"required_information": tool_input[0]}
         try:
-            # Call the function with the input data
-            required_info = input_data["required_information"] if "required_information" in input_data else input_data
-            results = self.func(required_info)
+            required_info = tool_input.get("required_information", tool_input)
+            results = run_credit_pull_api(required_info)
             print("Credit Pull Response:", results)
             return results
-        
         except requests.RequestException as e:
-            # Handle request-related errors
             raise ValueError(f"Request failed: {str(e)}")
-        
         except Exception as e:
-            # Handle other errors
             raise ValueError(f"An error occurred: {str(e)}")
-        
+
+    # async def _arun(self, tool_input: Union[List, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+    #     # Implement the async version if needed
+    #     return await run_in_executor(None, self._run, tool_input, **kwargs)
+
 class LeadCreateAPITool(Tool):
     name: str = "LeadCreateAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to create a new lead in Salesforce."
-    func = run_lead_create_api
-
-    def __call__(self, input_data, *args) -> Dict[str, Any]:
+    
+    def _run(self, tool_input: Union[List, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+        if isinstance(tool_input, list) and "Debt" in tool_input[0]:
+            # Handle string input if necessary
+            tool_input = {"required_information": tool_input[0]}
+        
         try:
-            # Call the function with the input data
-            required_info = input_data["required_information"] if "required_information" in input_data else input_data
-            results = self.func(required_info)
+            required_info = tool_input.get("required_information", tool_input)
+            results = run_lead_create_api(required_info)
             print("Lead Create Response:", results)
             return results
-        
         except requests.RequestException as e:
-            # Handle request-related errors
             raise ValueError(f"Request failed: {str(e)}")
-        
         except Exception as e:
-            # Handle other errors
             raise ValueError(f"An error occurred: {str(e)}")
+
+    # async def _arun(self, tool_input: Union[str, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+    #     # Implement the async version if needed
+    #     return await run_in_executor(None, self._run, tool_input, **kwargs)
         
 # Usage example
 credit_pull_api_tool = CreditPullAPITool(

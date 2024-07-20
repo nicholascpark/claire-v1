@@ -2,6 +2,7 @@ from langchain_core.messages import ToolMessage, AIMessage
 from langchain_core.runnables import RunnableLambda
 from langgraph.prebuilt import ToolNode as BaseToolNode
 from flask_socketio import SocketIO
+from typing import List, Union, Dict, Any
 
 def create_tool_node_with_fallback(tools: list) -> dict:
     return BaseToolNode(tools).with_fallbacks(
