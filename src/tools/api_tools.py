@@ -2,6 +2,7 @@ from langchain_core.tools import Tool, StructuredTool
 from typing import Dict, Any
 import requests
 import os
+from src.state import ConvoState
 
 def run_credit_pull_api(inputs) -> Dict[str, Any]:
 
@@ -105,13 +106,15 @@ class LeadCreateAPITool(StructuredTool):
 credit_pull_api_tool = CreditPullAPITool(
         name="CreditPullAPI",
         description="Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to pull the customer's credit report.",
-        func=run_credit_pull_api
+        func=run_credit_pull_api,
+        args_schema=ConvoState
         )
 
 lead_create_api_tool = LeadCreateAPITool(
         name="LeadCreateAPI",
         description="Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to create a new lead in Salesforce.",
-        func=run_lead_create_api
+        func=run_lead_create_api,
+        args_schema=ConvoState
         )
 
 
