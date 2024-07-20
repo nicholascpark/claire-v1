@@ -114,14 +114,14 @@ class ConvoStateModel(BaseModel):
     reason_for_decline: Optional[str] = Field(description="Reason for declining the customer.")
 
 # Usage example
-credit_pull_api_tool = CreditPullAPITool(
+credit_pull_api_tool = StructuredTool.from_function(
         name="CreditPullAPI",
         description="Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to pull the customer's credit report.",
         func=run_credit_pull_api,
         args_schema=ConvoStateModel
         )
 
-lead_create_api_tool = LeadCreateAPITool(
+lead_create_api_tool = StructuredTool.from_function(
         name="LeadCreateAPI",
         description="Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to create a new lead in Salesforce.",
         func=run_lead_create_api,
