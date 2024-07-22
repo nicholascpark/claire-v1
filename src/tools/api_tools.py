@@ -2,36 +2,89 @@ from langchain_core.tools import Tool
 from typing import Dict, Any, List, Union
 import requests
 import os
+import httpx
+
+# def run_credit_pull_api(inputs) -> Dict[str, Any]:
+
+#     if not inputs.get("credit_pull_permission"):
+#         return {"message": "Please obtain credit pull permission first."}
+
+#     request_data = inputs["required_information"]
+#     # Make the POST request
+#     try:
+#         response = requests.post(
+#             "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
+#             json=request_data,
+#             headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
+#         )
+#     except Exception as e:
+#         print(f"Error: Unable to make the POST request to the ClearOne API: {e}")
+    
+#     try:
+#         response.raise_for_status()
+#     except requests.exceptions.HTTPError as err:
+#         print(f'HTTP error occurred: {err}')  
+#     except Exception as err:
+#         print(f'Other error occurred: {err}')   
+
+#     print("Credit Pull Status Code:", response.status_code)
+        
+#     return response.json()
 
 def run_credit_pull_api(inputs) -> Dict[str, Any]:
-
     if not inputs.get("credit_pull_permission"):
         return {"message": "Please obtain credit pull permission first."}
 
     request_data = inputs["required_information"]
-    # Make the POST request
-    try:
-        response = requests.post(
-            "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
-            json=request_data,
-            headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
-        )
-    except Exception as e:
-        print(f"Error: Unable to make the POST request to the ClearOne API: {e}")
-    
-    try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-        print(f'HTTP error occurred: {err}')  
-    except Exception as err:
-        print(f'Other error occurred: {err}')   
+    url = "https://carbon.clearoneadvantage.com/api/affiliate/creditpull"
+    headers = {"APIKEY": os.getenv("CLEARONE_LEADS_API_KEY")}
 
-    print("Credit Pull Status Code:", response.status_code)
-        
-    return response.json()
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(url, json=request_data, headers=headers)
+            response.raise_for_status()
+            print("Credit Pull Status Code:", response.status_code)
+            return response.json()
+    except httpx.RequestError as exc:
+        print(f"An error occurred while requesting {exc.request.url!r}.")
+    except httpx.HTTPStatusError as exc:
+        print(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
+    except Exception as exc:
+        print(f"An unexpected error occurred: {exc}")
+    
+    return {"message": "An error occurred during the credit pull request."}
+
+
+# def run_lead_create_api(inputs) -> Dict[str, Any]:
+
+#     if not inputs.get("contact_permission"):
+#         return {"message": "Obtain contact permission first."}
+    
+#     if inputs.get("credit_pull_complete") is None:
+#         return {"message": "Ask for credit pull permission first."}
+
+#     request_data = inputs["required_information"]
+#     # Make the POST request
+#     response = requests.post(
+#         "https://carbon.clearoneadvantage.com/api/lead/create?detailedResponse=true",
+#         json=request_data,
+#         headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
+#     )
+
+#     try:
+#         response.raise_for_status()
+#     except requests.exceptions.HTTPError as err:
+#         print(f'HTTP error occurred: {err}')
+#     except Exception as err:
+#         print(f'Other error occurred: {err}')   
+
+#     result = response.json()
+
+#     print("Lead Create Status Code:", response.status_code)
+
+#     return result
 
 def run_lead_create_api(inputs) -> Dict[str, Any]:
-
     if not inputs.get("contact_permission"):
         return {"message": "Obtain contact permission first."}
     
@@ -39,25 +92,23 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
         return {"message": "Ask for credit pull permission first."}
 
     request_data = inputs["required_information"]
-    # Make the POST request
-    response = requests.post(
-        "https://carbon.clearoneadvantage.com/api/lead/create?detailedResponse=true",
-        json=request_data,
-        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
-    )
+    url = "https://carbon.clearoneadvantage.com/api/lead/create?detailedResponse=true"
+    headers = {"APIKEY": os.getenv("CLEARONE_LEADS_API_KEY")}
 
     try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-        print(f'HTTP error occurred: {err}')
-    except Exception as err:
-        print(f'Other error occurred: {err}')   
-
-    result = response.json()
-
-    print("Lead Create Status Code:", response.status_code)
-
-    return result
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(url, json=request_data, headers=headers)
+            response.raise_for_status()
+            print("Lead Create Status Code:", response.status_code)
+            return response.json()
+    except httpx.RequestError as exc:
+        print(f"An error occurred while requesting {exc.request.url!r}.")
+    except httpx.HTTPStatusError as exc:
+        print(f"Error response {exc.response.status_code} while requesting {exc.request.url!r}.")
+    except Exception as exc:
+        print(f"An unexpected error occurred: {exc}")
+    
+    return {"message": "An error occurred during the lead creation request."}
 
 
 class CreditPullAPITool(Tool):

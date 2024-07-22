@@ -7,7 +7,6 @@ langchain-anthropic
 langchain-community
 python-dotenv
 pydantic
-faiss-cpu
 tiktoken
 numexpr
 langserve
@@ -17,3 +16,4 @@ pgeocode
 pyodbc
 gunicorn
 eventlet
+httpx
