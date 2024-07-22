@@ -52,7 +52,7 @@ class AskContactPermissionTool(Tool):
     description: str = "Ask the user for permission to contact them and process their response."
     func = ask_contact_permission
 
-    def __call__(self, input_data: Dict[str, Any]) -> Dict[str, bool]:
+    def invoke(self, input_data: Dict[str, Any]) -> Dict[str, bool]:
         return self.func()
 
 class AskCreditPullPermissionTool(Tool):
@@ -60,7 +60,7 @@ class AskCreditPullPermissionTool(Tool):
     description: str = "Ask the user for permission to pull their credit and process their response."
     func = ask_credit_pull_permission
 
-    def __call__(self, input_data: Dict[str, Any]) -> Dict[str, bool]:
+    def invoke(self, input_data: Dict[str, Any]) -> Dict[str, bool]:
         return self.func()
 
 # Create instances of the tools
