@@ -10,11 +10,14 @@ def run_credit_pull_api(inputs) -> Dict[str, Any]:
 
     request_data = inputs["required_information"]
     # Make the POST request
-    response = requests.post(
-        "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
-        json=request_data,
-        headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
-    )
+    try:
+        response = requests.post(
+            "https://carbon.clearoneadvantage.com/api/affiliate/creditpull",
+            json=request_data,
+            headers={"APIKEY": F"{os.getenv("CLEARONE_LEADS_API_KEY")}"}
+        )
+    except Exception as e:
+        print(f"Error: Unable to make the POST request to the ClearOne API: {e}")
     
     try:
         response.raise_for_status()
@@ -60,48 +63,46 @@ def run_lead_create_api(inputs) -> Dict[str, Any]:
 class CreditPullAPITool(Tool):
     name: str = "CreditPullAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to pull the customer's credit report."
+    func = run_credit_pull_api
     
-    def _run(self, tool_input: Union[List, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
-        if isinstance(tool_input, list) and "Debt" in tool_input[0]:
-            # Handle string input if necessary
-            tool_input = {"required_information": tool_input[0]}
+    def __call__(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            # required_info = tool_input.get("required_information", tool_input)
-            results = run_credit_pull_api(tool_input)
+            # Call the function with the input data
+            required_info = input_data["required_information"]
+            results = self.func(required_info)
             print("Credit Pull Response:", results)
             return results
+        
         except requests.RequestException as e:
+            # Handle request-related errors
             raise ValueError(f"Request failed: {str(e)}")
+        
         except Exception as e:
+            # Handle other errors
             raise ValueError(f"An error occurred: {str(e)}")
-
-    # async def _arun(self, tool_input: Union[List, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
-    #     # Implement the async version if needed
-    #     return await run_in_executor(None, self._run, tool_input, **kwargs)
-
+        
 class LeadCreateAPITool(Tool):
     name: str = "LeadCreateAPI"
     description: str = "Once all the required customer info is collected, this makes a POST request to the ClearOne Advantage API to create a new lead in Salesforce."
-    
-    def _run(self, tool_input: Union[List, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
-        if isinstance(tool_input, list) and "Debt" in tool_input[0]:
-            # Handle string input if necessary
-            tool_input = {"required_information": tool_input[0]}
-        
+    func = run_lead_create_api
+
+    def __call__(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            # required_info = tool_input.get("required_information", tool_input)
-            results = run_lead_create_api(tool_input)
+            # Call the function with the input data
+            required_info = input_data["required_information"]
+            results = self.func(required_info)
             print("Lead Create Response:", results)
             return results
-        except requests.RequestException as e:
-            raise ValueError(f"Request failed: {str(e)}")
-        except Exception as e:
-            raise ValueError(f"An error occurred: {str(e)}")
-
-    # async def _arun(self, tool_input: Union[str, Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
-    #     # Implement the async version if needed
-    #     return await run_in_executor(None, self._run, tool_input, **kwargs)
         
+        except requests.RequestException as e:
+            # Handle request-related errors
+            raise ValueError(f"Request failed: {str(e)}")
+        
+        except Exception as e:
+            # Handle other errors
+            raise ValueError(f"An error occurred: {str(e)}")
+        
+
 # Usage example
 credit_pull_api_tool = CreditPullAPITool(
         name="CreditPullAPI",

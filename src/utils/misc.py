@@ -15,7 +15,7 @@ def handle_tool_error(state) -> dict:
     return {
         "messages": [
             ToolMessage(
-                content=f"Error: {repr(error)}\n please fix your mistakes.",
+                content=f"Error: {repr(error)}\n please fix your mistakes. \n Full State: {state}",
                 # content="Continue",
                 tool_call_id=tc["id"],
             )

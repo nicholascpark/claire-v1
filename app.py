@@ -119,8 +119,6 @@ def process_message(state):
                         for tool_call in message.tool_calls:
                             tool_name = tool_call["name"]
                             tool_call_id = tool_call["id"]
-                            tool_call_args = tool_call.get("args") ######
-                            print("Tool Call Args:", tool_call_args) ######
                             if tool_name == "AskContactPermissionTool":
                                 if check_all_required_info(state) and state.get("contact_permission") is None:
                                     question = "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes/y or no/n)"
