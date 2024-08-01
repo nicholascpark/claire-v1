@@ -136,6 +136,7 @@
     </div>
     <script>
         const socket = io();
+
         const chatContainer = document.getElementById('chat-container');
         const userInput = document.getElementById('user-input');
         const typingIndicator = document.getElementById('typing-indicator');
@@ -145,6 +146,8 @@
     
         socket.on('connect', () => {
             console.log('Connected to server');
+            // Join a room with the socket's session ID
+            socket.emit('join', { room: socket.id });
         });
     
         socket.on('bot_response', (data) => {

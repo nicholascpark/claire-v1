@@ -81,4 +81,4 @@ def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str
     elif response in ['n', 'no']:
         return {"credit_pull_permission": False}
     else:
-        return {"message": "Invalid input. Do you give permission for us to perform a soft pull on your credit profile? This will NOT affect your credit score.** (Please type: yes/y or no/n)"}
+        return {"message": "Invalid input. Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.** (Please type: yes/y or no/n)"}
