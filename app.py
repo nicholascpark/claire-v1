@@ -18,40 +18,13 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 socketio = SocketIO(app, manage_session=False)
 
 part_1_graph = create_graph()
-
-config = {
-    "configurable": {
-        "thread_id": str(uuid.uuid4()),
-    }
-}
-
 _printed = set()
-
-# Custom session storage
 session_store = {}
-
-# def serialize_message(msg):
-#     return {
-#         'type': msg.__class__.__name__,
-#         'content': msg.content,
-#         'additional_kwargs': msg.additional_kwargs,
-#         'tool_call_id': msg.tool_call_id if hasattr(msg, 'tool_call_id') else None
-#     }
-
-# def deserialize_message(msg_dict):
-#     msg_type = msg_dict['type']
-#     if msg_type == 'HumanMessage':
-#         return HumanMessage(content=msg_dict['content'], additional_kwargs=msg_dict['additional_kwargs'])
-#     elif msg_type == 'AIMessage':
-#         return AIMessage(content=msg_dict['content'], additional_kwargs=msg_dict['additional_kwargs'])
-#     elif msg_type == 'ToolMessage':
-#         return ToolMessage(content=msg_dict['content'], additional_kwargs=msg_dict['additional_kwargs'])
 
 def serialize_message(msg):
     serialized = {
         'type': msg.__class__.__name__,
     }
-    # Dynamically add all attributes of the message object
     for key, value in msg.__dict__.items():
         if isinstance(value, (str, int, float, bool, list, dict, type(None))):
             serialized[key] = value
@@ -105,12 +78,19 @@ def deserialize_convo_state(state_json):
 def index():
     return render_template('index.html')
 
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
     session_id = request.sid
     join_room(session_id)
-    initial_message = generate_initial_message()
+    thread_id = str(uuid.uuid4())
+    config = {
+        "configurable": {
+            "thread_id": thread_id,
+        }
+    }
+    initial_message = generate_initial_message(config)
     initial_state = ConvoState(
         user_input="",
         messages=[AIMessage(content=initial_message)],
@@ -122,9 +102,13 @@ def handle_connect():
         savings_estimate=None,
         reason_for_decline=None
     )
-    session_store[session_id] = serialize_convo_state(initial_state)
-    print(f"Session {session_id} initialized with state: {session_store[session_id]}")
+    session_store[session_id] = {
+        'state': serialize_convo_state(initial_state),
+        'config': config
+    }
+    print(f"Session {session_id} initialized with thread_id: {thread_id}")
     emit('bot_response', {'message': initial_message}, room=session_id)
+
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -139,18 +123,18 @@ def handle_disconnect():
 def handle_message(message):
     session_id = request.sid
     print(f"Received message from {session_id}: {message}")
-    print(f"Current session data: {session_store}")
     if session_id not in session_store:
         print(f"Session {session_id} not found")
         emit('bot_response', {'message': "Session expired. Please refresh the page."}, room=session_id)
         return
     
     try:
-        conversation_state = deserialize_convo_state(session_store[session_id])
+        conversation_state = deserialize_convo_state(session_store[session_id]['state'])
+        config = session_store[session_id]['config']
         conversation_state['user_input'] = message
         conversation_state['messages'].append(HumanMessage(content=message))
-        updated_state = process_message(conversation_state, session_id)
-        session_store[session_id] = serialize_convo_state(updated_state)
+        updated_state = process_message(conversation_state, session_id, config)
+        session_store[session_id]['state'] = serialize_convo_state(updated_state)
         print(f"Updated session {session_id} with new state")
     except Exception as e:
         print(f"Error processing message: {str(e)}")
@@ -165,7 +149,8 @@ def handle_user_input_response(data):
     
     print("DATA:\n", data)
 
-    conversation_state = deserialize_convo_state(session_store[session_id])
+    conversation_state = deserialize_convo_state(session_store[session_id]['state'])
+    config = session_store[session_id]['config']
     tool_name = data['tool_name']
     user_response = data['response'].lower()
     tool_call_id = data['tool_call_id']
@@ -176,7 +161,7 @@ def handle_user_input_response(data):
         result = handle_credit_pull_permission(conversation_state, user_response)
     else:
         emit('bot_response', {'message': "Unknown tool called."}, room=session_id)
-        session_store[session_id] = serialize_convo_state(conversation_state)
+        session_store[session_id]['state'] = serialize_convo_state(conversation_state)
         return
 
     if result.get("message"):
@@ -186,7 +171,7 @@ def handle_user_input_response(data):
             'tool_call_id': tool_call_id,
             'message': result["message"]
         }, room=session_id)
-        session_store[session_id] = serialize_convo_state(conversation_state)
+        session_store[session_id]['state'] = serialize_convo_state(conversation_state)
         return
     
     tool_message = ToolMessage(content=str(result), tool_call_id=tool_call_id)
@@ -194,10 +179,10 @@ def handle_user_input_response(data):
     conversation_state['user_input'] = user_response
     conversation_state['messages'].append(tool_message)
     conversation_state.update(result)
-    updated_state = process_message(conversation_state, session_id)
-    session_store[session_id] = serialize_convo_state(updated_state)
+    updated_state = process_message(conversation_state, session_id, config)
+    session_store[session_id]['state'] = serialize_convo_state(updated_state)
 
-def process_message(state, session_id):
+def process_message(state, session_id, config):
     events = part_1_graph.stream(state, config, stream_mode="values")
     
     for event in events:
@@ -253,8 +238,7 @@ def process_message(state, session_id):
     state['messages'].append(message)
     return state
 
-
-def generate_initial_message():
+def generate_initial_message(config):
     initial_state = ConvoState(
         user_input=".",
         messages=[HumanMessage(content=".")],
