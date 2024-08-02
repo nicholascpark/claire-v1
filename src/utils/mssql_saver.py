@@ -76,6 +76,8 @@ class MSSQLSaver(BaseCheckpointSaver):
                     parent_ts NVARCHAR(255),
                     checkpoint_blob VARBINARY(MAX),
                     metadata VARBINARY(MAX),
+                    parsed_ts DATETIME2,
+                    created_ts DATETIME DEFAULT GETDATE(),
                     PRIMARY KEY (thread_id, thread_ts)
                 )
             """)
