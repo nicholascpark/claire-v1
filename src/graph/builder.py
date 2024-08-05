@@ -62,8 +62,8 @@ def create_graph():
         f"UID={os.getenv("SQL_USERNAME")};"
         f"PWD={os.getenv("SQL_PWD")};"
     )
-    memory = MSSQLSaver(conn_string)
-    # memory = MemorySaver()
+    # memory = MSSQLSaver(conn_string)
+    memory = MemorySaver()
 
     return builder.compile(checkpointer=memory,)# interrupt_after=["api_tools"]    )
 
