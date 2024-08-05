@@ -200,7 +200,7 @@ def process_message(state, session_id, config):
                             tool_call_id = tool_call["id"]
                             if tool_name == "AskContactPermissionTool":
                                 if check_all_required_info(state) and state['contact_permission'] is None:
-                                    question = "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes/y or no/n) \n * **You understand that by typing 'yes' or 'y', you are providing your consent for a ClearOne Advantage representative or one of our marketing partners or network providers to contact you by email, text and phone, which may include pre-recorded messages and use automated technology. Your consent to such contact is not required as a condition to use a network service provider. You can unsubscribe at any time.** "
+                                    question = "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes or no) \n * **You understand that by typing 'yes', you are providing your consent for a ClearOne Advantage representative or one of our marketing partners or network providers to contact you by email, text and phone, which may include pre-recorded messages and use automated technology. Your consent to such contact is not required as a condition to use a network service provider. You can unsubscribe at any time.** "
                                     latest_tool_call = {
                                         'tool_name': tool_name,
                                         'tool_call_id': tool_call_id,
@@ -214,7 +214,7 @@ def process_message(state, session_id, config):
                                     socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."}, room=session_id)
                             if tool_name == "AskCreditPullPermissionTool":
                                 if check_all_required_info(state) and state['contact_permission'] and state['credit_pull_permission'] is None:
-                                    question = "Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.† (Please type: yes/y or no/n) \n † **You understand that by typing 'yes' or 'y', you are providing written instructions to ClearOne Advantage, LLC (ClearOne) under the Fair Credit Reporting Act authorizing ClearOne Advantage to obtain information from your personal credit report or other information from a credit bureau solely for debt settlement. This will not impact your credit.** "
+                                    question = "Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.† (Please type: yes or no) \n † **You understand that by typing 'yes', you are providing written instructions to ClearOne Advantage, LLC (ClearOne) under the Fair Credit Reporting Act authorizing ClearOne Advantage to obtain information from your personal credit report or other information from a credit bureau solely for debt settlement. This will not impact your credit.** "
                                     latest_tool_call = {
                                         'tool_name': tool_name,
                                         'tool_call_id': tool_call_id,
