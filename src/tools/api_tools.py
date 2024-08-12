@@ -1,5 +1,4 @@
 from langchain_core.tools import BaseTool,tool
-
 from typing import Dict, Any, List, Union
 import requests
 import os
@@ -36,7 +35,8 @@ def lead_create_api_tool(required_information, contact_permission, credit_pull_p
     if not contact_permission:
         return {"message": "Obtain contact permission first."}
     
-    if credit_pull_complete is None:
+    # if credit_pull_complete is None:
+    if not credit_pull_complete:
         return {"message": "Ask for credit pull permission first."}
 
     request_data = required_information

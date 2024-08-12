@@ -28,3 +28,5 @@ class ConvoState(TypedDict):
     lead_create_complete: Optional[bool]
     savings_estimate: Optional[dict]
     reason_for_decline: Optional[str]
+    # session_id: Optional[str]
+    # tool_calls: Optional[list[dict]]

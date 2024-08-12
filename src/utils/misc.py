@@ -11,6 +11,7 @@ def create_tool_node_with_fallback(tools: list) -> dict:
 
 def handle_tool_error(state) -> dict:
     error = state.get("error")
+    print(f"error: {error}")
     tool_calls = state["messages"][-1].tool_calls
     return {
         "messages": [

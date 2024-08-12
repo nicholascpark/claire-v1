@@ -140,6 +140,51 @@ def handle_message(message):
         print(f"Error processing message: {str(e)}")
         emit('bot_response', {'message': "An error occurred. Please try again."}, room=session_id)
 
+# @socketio.on('user_input_response')
+# def handle_user_input_response(data):
+#     ### for contact and credit pull permission
+#     session_id = request.sid
+#     if session_id not in session_store:
+#         emit('bot_response', {'message': "Session expired. Please refresh the page."}, room=session_id)
+#         return
+    
+#     conversation_state = deserialize_convo_state(session_store[session_id]['state'])
+#     config = session_store[session_id]['config']
+#     tool_name = data['tool_name']
+#     user_response = data['response'].lower()
+#     tool_call_id = data['tool_call_id']
+    
+#     if tool_name == "AskContactPermissionTool":
+#         result = handle_contact_permission(conversation_state, user_response)
+#     elif tool_name == "AskCreditPullPermissionTool":
+#         result = handle_credit_pull_permission(conversation_state, user_response)
+#     else:
+#         emit('bot_response', {'message': "Unknown tool called."}, room=session_id)
+#         session_store[session_id]['state'] = serialize_convo_state(conversation_state)
+#         return
+
+#     # if there was a previous AIMessage with this tool_call_id
+#     latest_message = conversation_state['messages'][-1]
+#     print("Check this:",latest_message)
+#     if isinstance(latest_message, AIMessage) and tool_call_id in [tool_call['id'] for tool_call in latest_message.tool_calls]:
+#         tool_message = ToolMessage(content=str(result), tool_call_id=tool_call_id)
+#         conversation_state['messages'].append(tool_message)
+
+#     if result.get("invalid_input"):
+#         # conversation_state["messages"].append(AIMessage(content=result["message"], tool_call_id=tool_call_id))
+#         emit('user_input_required', {
+#             'tool_name': tool_name,
+#             'tool_call_id': tool_call_id,
+#             'message': result["message"]
+#         }, room=session_id)
+#         session_store[session_id]['state'] = serialize_convo_state(conversation_state)
+#         return
+    
+#     conversation_state['user_input'] = user_response
+#     conversation_state.update(result)
+#     updated_state = process_message(conversation_state, session_id, config)
+#     session_store[session_id]['state'] = serialize_convo_state(updated_state)
+
 @socketio.on('user_input_response')
 def handle_user_input_response(data):
     session_id = request.sid
@@ -147,40 +192,48 @@ def handle_user_input_response(data):
         emit('bot_response', {'message': "Session expired. Please refresh the page."}, room=session_id)
         return
     
-    print("DATA:\n", data)
-
     conversation_state = deserialize_convo_state(session_store[session_id]['state'])
     config = session_store[session_id]['config']
     tool_name = data['tool_name']
     user_response = data['response'].lower()
     tool_call_id = data['tool_call_id']
     
-    if tool_name == "AskContactPermissionTool":
-        result = handle_contact_permission(conversation_state, user_response)
-    elif tool_name == "AskCreditPullPermissionTool":
-        result = handle_credit_pull_permission(conversation_state, user_response)
+    if tool_name in ["AskContactPermissionTool", "AskCreditPullPermissionTool"]:
+        if user_response not in ['yes', 'no']:
+            question = get_permission_question(tool_name)
+            emit('user_input_required', {
+                'tool_name': tool_name,
+                'tool_call_id': tool_call_id,
+                'message': f"Invalid input. {question}"
+            }, room=session_id)
+            return
+        
+        result = handle_permission(conversation_state, tool_name, user_response)
+        
+        if result.get("invalid_input"):
+            emit('user_input_required', {
+                'tool_name': tool_name,
+                'tool_call_id': tool_call_id,
+                'message': result["message"]
+            }, room=session_id)
+            return
+        
+        tool_message = ToolMessage(content=json.dumps(result), tool_call_id=tool_call_id)
+        conversation_state['messages'].append(tool_message)
+        
+        conversation_state.update(result)
+        updated_state = process_message(conversation_state, session_id, config)
+        session_store[session_id]['state'] = serialize_convo_state(updated_state)
     else:
         emit('bot_response', {'message': "Unknown tool called."}, room=session_id)
-        session_store[session_id]['state'] = serialize_convo_state(conversation_state)
-        return
 
-    if result.get("message"):
-        conversation_state["messages"].append(AIMessage(content=result["message"], tool_call_id=tool_call_id))
-        emit('user_input_required', {
-            'tool_name': tool_name,
-            'tool_call_id': tool_call_id,
-            'message': result["message"]
-        }, room=session_id)
-        session_store[session_id]['state'] = serialize_convo_state(conversation_state)
-        return
-    
-    tool_message = ToolMessage(content=str(result), tool_call_id=tool_call_id)
-    
-    conversation_state['user_input'] = user_response
-    conversation_state['messages'].append(tool_message)
-    conversation_state.update(result)
-    updated_state = process_message(conversation_state, session_id, config)
-    session_store[session_id]['state'] = serialize_convo_state(updated_state)
+def handle_permission(conversation_state, tool_name, user_response):
+    if tool_name == "AskContactPermissionTool":
+        return handle_contact_permission(conversation_state, user_response)
+    elif tool_name == "AskCreditPullPermissionTool":
+        return handle_credit_pull_permission(conversation_state, user_response)
+    else:
+        return {"message": "Unknown permission tool.", "invalid_input": True}
 
 def process_message(state, session_id, config):
     events = part_1_graph.stream(state, config, stream_mode="values")
@@ -198,45 +251,107 @@ def process_message(state, session_id, config):
                         for tool_call in message.tool_calls:
                             tool_name = tool_call["name"]
                             tool_call_id = tool_call["id"]
-                            if tool_name == "AskContactPermissionTool":
-                                if check_all_required_info(state) and state['contact_permission'] is None:
-                                    question = "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes or no) \n * **You understand that by typing 'yes', you are providing your consent for a ClearOne Advantage representative or one of our marketing partners or network providers to contact you by email, text and phone, which may include pre-recorded messages and use automated technology. Your consent to such contact is not required as a condition to use a network service provider. You can unsubscribe at any time.** "
-                                    latest_tool_call = {
-                                        'tool_name': tool_name,
-                                        'tool_call_id': tool_call_id,
-                                        'message': question
-                                    }
-                                    state['messages'].append(message)
-                                    _print_event(event, _printed)
-                                    socketio.emit('user_input_required', latest_tool_call, room=session_id)
-                                    return state
-                                else:
-                                    socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."}, room=session_id)
-                            if tool_name == "AskCreditPullPermissionTool":
-                                if check_all_required_info(state) and state['contact_permission'] and state['credit_pull_permission'] is None:
-                                    question = "Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.† (Please type: yes or no) \n † **You understand that by typing 'yes', you are providing written instructions to ClearOne Advantage, LLC (ClearOne) under the Fair Credit Reporting Act authorizing ClearOne Advantage to obtain information from your personal credit report or other information from a credit bureau solely for debt settlement. This will not impact your credit.** "
-                                    latest_tool_call = {
-                                        'tool_name': tool_name,
-                                        'tool_call_id': tool_call_id,
-                                        'message': question
-                                    }
-                                    state['messages'].append(message)
-                                    _print_event(event, _printed)
-                                    socketio.emit('user_input_required', latest_tool_call, room=session_id)
-                                    return state
-                                else:
-                                    socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."}, room=session_id)
+                            if tool_name in ["AskContactPermissionTool", "AskCreditPullPermissionTool"]:
+                                question = get_permission_question(tool_name)
+                                state['messages'].append(message)
+                                _print_event(event, _printed)
+                                socketio.emit('user_input_required', {
+                                    'tool_name': tool_name,
+                                    'tool_call_id': tool_call_id,
+                                    'message': question
+                                }, room=session_id)
+                                return state
 
         _print_event(event, _printed)
         
         # Update the state with any new information from the event
-        for key in ['required_information', 'contact_permission', 'credit_pull_permission', 
-                    'credit_pull_complete', 'lead_create_complete', 'savings_estimate', 'reason_for_decline']:
+        for key in ['required_information', 'contact_permission', 'credit_pull_permission', 'credit_pull_complete', 'lead_create_complete', 'savings_estimate', 'reason_for_decline']:
             if key in event:
                 state[key] = event[key]
 
     state['messages'].append(message)
     return state
+
+def get_permission_question(tool_name):
+    if tool_name == "AskContactPermissionTool":
+        return "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes or no) \n * **You understand that by typing 'yes', you are providing your consent for a ClearOne Advantage representative or one of our marketing partners or network providers to contact you by email, text and phone, which may include pre-recorded messages and use automated technology. Your consent to such contact is not required as a condition to use a network service provider. You can unsubscribe at any time.** "
+    elif tool_name == "AskCreditPullPermissionTool":
+        return "Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.† (Please type: yes or no) \n † **You understand that by typing 'yes', you are providing written instructions to ClearOne Advantage, LLC (ClearOne) under the Fair Credit Reporting Act authorizing ClearOne Advantage to obtain information from your personal credit report or other information from a credit bureau solely for debt settlement. This will not impact your credit.** "
+    else:
+        raise ValueError(f"Unknown tool name: {tool_name}")
+
+# def process_message(state, session_id, config):
+#     events = part_1_graph.stream(state, config, stream_mode="values")
+    
+#     for event in events:
+#         message = event.get("messages")
+#         if message:
+#             if isinstance(message, list):
+#                 message = message[-1]
+#             if message.id not in _printed:
+#                 if isinstance(message, AIMessage):
+#                     if len(message.content.strip()) > 0:
+#                         socketio.emit('bot_response', {'message': message.content}, room=session_id)
+#                     if message.tool_calls:
+#                         for tool_call in message.tool_calls:
+#                             tool_name = tool_call["name"]
+#                             tool_call_id = tool_call["id"]
+#                             if tool_name == "AskContactPermissionTool":
+#                                 if state['contact_permission']:
+#                                     state['messages'].append(ToolMessage(content="Great. Let's move forward, since we have your contact permission.", tool_call_id=tool_call_id))
+#                                     socketio.emit('bot_response', {'message': "Great. Let's move forward, since we have your contact permission."}, room=session_id)
+#                                 elif check_all_required_info(state) and state['contact_permission'] is None:
+#                                     question = "Do you give permission for us to contact you through email or phone number provided?* (Please type: yes or no) \n * **You understand that by typing 'yes', you are providing your consent for a ClearOne Advantage representative or one of our marketing partners or network providers to contact you by email, text and phone, which may include pre-recorded messages and use automated technology. Your consent to such contact is not required as a condition to use a network service provider. You can unsubscribe at any time.** "
+#                                     latest_tool_call = {
+#                                         'tool_name': tool_name,
+#                                         'tool_call_id': tool_call_id,
+#                                         'message': question
+#                                     }
+#                                     state['messages'].append(message)
+#                                     _print_event(event, _printed)
+#                                     socketio.emit('user_input_required', latest_tool_call, room=session_id)
+#                                     return state
+#                                 else:
+#                                     state['messages'].append(message)
+#                                     _print_event(event, _printed)
+#                                     socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."}, room=session_id)
+#                                     state['messages'].append(ToolMessage(content="Must collect the list of required customer information first.", tool_call_id=tool_call_id))
+#                                     return state
+#                             if tool_name == "AskCreditPullPermissionTool":
+#                                 if state['contact_permission'] is None:
+#                                     state['messages'].append(ToolMessage(content="Must obtain contact permission first.", tool_call_id=tool_call_id))
+#                                     socketio.emit('bot_response', {'message': "Must obtain contact permission first."}, room=session_id)
+#                                 elif state['credit_pull_permission'] is not None:
+#                                     state['messages'].append(ToolMessage(content="Credit pull permission already obtained.", tool_call_id=tool_call_id))
+#                                     # socketio.emit('bot_response', {'message': "Credit pull permission already obtained."}, room=session_id)  
+#                                     pass                                  
+#                                 elif check_all_required_info(state) and state['contact_permission'] and state['credit_pull_permission'] is None:
+#                                     question = "Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.† (Please type: yes or no) \n † **You understand that by typing 'yes', you are providing written instructions to ClearOne Advantage, LLC (ClearOne) under the Fair Credit Reporting Act authorizing ClearOne Advantage to obtain information from your personal credit report or other information from a credit bureau solely for debt settlement. This will not impact your credit.** "
+#                                     latest_tool_call = {
+#                                         'tool_name': tool_name,
+#                                         'tool_call_id': tool_call_id,
+#                                         'message': question
+#                                     }
+#                                     state['messages'].append(message)
+#                                     _print_event(event, _printed)
+#                                     socketio.emit('user_input_required', latest_tool_call, room=session_id)
+#                                     return state
+#                                 else:
+#                                     state['messages'].append(message)
+#                                     _print_event(event, _printed)
+#                                     socketio.emit('bot_response', {'message': "Must collect the list of required customer information first."}, room=session_id)
+#                                     state['messages'].append(ToolMessage(content="Must collect the list of required customer information first.", tool_call_id=tool_call_id))
+#                                     return state
+
+#         _print_event(event, _printed)
+        
+#         # Update the state with any new information from the event
+#         for key in ['required_information', 'contact_permission', 'credit_pull_permission', 'credit_pull_complete', 'lead_create_complete', 'savings_estimate', 'reason_for_decline']:
+#             if key in event:
+#                 state[key] = event[key]
+
+#     state['messages'].append(message)
+#     return state
 
 def generate_initial_message(config):
     initial_state = ConvoState(

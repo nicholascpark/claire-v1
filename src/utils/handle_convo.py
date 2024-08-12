@@ -62,7 +62,8 @@ def handle_contact_permission(conversation_state, response: str) -> Dict[str, bo
     elif response.strip().lower() in ['no']:
         return {"contact_permission": False}
     else:
-        return {"message": "Invalid input. Do you give permission for us to contact you through email or phone number provided?* (Please type: yes or no"}
+        return {"message": "Invalid input. Do you give permission for us to contact you through email or phone number provided? (Please type: yes or no) * ",
+                "invalid_input": True}
 
 def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str, bool]:
 
@@ -81,4 +82,6 @@ def handle_credit_pull_permission(conversation_state, response: str) -> Dict[str
     elif response.strip().lower() in ['no']:
         return {"credit_pull_permission": False}
     else:
-        return {"message": "Invalid input. Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.** (Please type: yes or no)"}
+        return {"message": "Invalid input. Do you give permission for us to obtain your credit profile? This will NOT affect your credit score. (Please type: yes or no) † ",
+                "invalid_input": True}
+    

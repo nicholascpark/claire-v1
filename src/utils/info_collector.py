@@ -82,3 +82,6 @@ def check_all_required_info(state) -> bool:
     required_info = state["required_information"]
     # print("Checking required information: ", required_info)
     return required_info.all_fields_not_none()
+
+def is_dict_populated(required_info) -> bool:
+    return all(value is not None for value in required_info.values())
