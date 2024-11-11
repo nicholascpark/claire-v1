@@ -251,6 +251,9 @@ def process_message(state, session_id, config):
                         for tool_call in message.tool_calls:
                             tool_name = tool_call["name"]
                             tool_call_id = tool_call["id"]
+                            if tool_name in ["LeadCreateAPITool", "CreditPullAPITool"]:                                   
+                                if state['contact_permission'] and not state['credit_pull_permission']: ##########################################
+                                    state["credit_pull_complete"] = False
                             if tool_name in ["AskContactPermissionTool", "AskCreditPullPermissionTool"]:
                                 question = get_permission_question(tool_name)
                                 state['messages'].append(message)
@@ -261,6 +264,7 @@ def process_message(state, session_id, config):
                                     'message': question
                                 }, room=session_id)
                                 return state
+
 
         _print_event(event, _printed)
         
@@ -279,6 +283,34 @@ def get_permission_question(tool_name):
         return "Do you give permission for us to obtain your credit profile? This will NOT affect your credit score.† (Please type: yes or no) \n † **You understand that by typing 'yes', you are providing written instructions to ClearOne Advantage, LLC (ClearOne) under the Fair Credit Reporting Act authorizing ClearOne Advantage to obtain information from your personal credit report or other information from a credit bureau solely for debt settlement. This will not impact your credit.** "
     else:
         raise ValueError(f"Unknown tool name: {tool_name}")
+    
+import requests
+
+def make_api_call(transformed_data):
+    url = "https://7jjla87ys8.execute-api.us-east-1.amazonaws.com/dev//api/funnel/form/"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.post(url, json=transformed_data, headers=headers)
+        response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
+        return response.json()
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        return {"error": True, "message": str(http_err)}
+    except requests.exceptions.ConnectionError as conn_err:
+        print(f"Error connecting: {conn_err}")
+        return {"error": True, "message": "Connection error occurred"}
+    except requests.exceptions.Timeout as timeout_err:
+        print(f"Timeout error occurred: {timeout_err}")
+        return {"error": True, "message": "Request timed out"}
+    except requests.exceptions.RequestException as req_err:
+        print(f"An error occurred while making the request: {req_err}")
+        return {"error": True, "message": "An error occurred while making the request"}
+    except ValueError as json_err:
+        print(f"JSON decoding error: {json_err}")
+        return {"error": True, "message": "Error decoding JSON response"}
 
 # def process_message(state, session_id, config):
 #     events = part_1_graph.stream(state, config, stream_mode="values")

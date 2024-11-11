@@ -70,9 +70,7 @@ def handle_user_input_response(data):
     if not conversation_state:
         emit('bot_response', {'message': "Session expired. Please refresh the page."})
         return
-    
-    print("DATA:\n", data)
-    
+        
     tool_name = data['tool_name']
     user_response = data['response'].lower()
     tool_call_id = data['tool_call_id']

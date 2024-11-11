@@ -48,18 +48,18 @@ def main():
             _print_event(event, _printed)
 
 if __name__ == "__main__":
-    # main()
-    your_connection_string = (
-        "DRIVER={ODBC Driver 17 for SQL Server};"
-        "SERVER=STGDBCOA;"
-        "DATABASE=ChatBot;"
-        "UID=svcChatBot;"
-        "PWD=@HMdc2wGpWEx;"
-    )
-    mssql_saver = MSSQLSaver(your_connection_string)
+    main()
+    # your_connection_string = (
+    #     "DRIVER={ODBC Driver 17 for SQL Server};"
+    #     "SERVER=STGDBCOA;"
+    #     "DATABASE=ChatBot;"
+    #     "UID=svcChatBot;"
+    #     "PWD=@HMdc2wGpWEx;"
+    # )
+    # mssql_saver = MSSQLSaver(your_connection_string)
     # mssql_saver.reset_table()
-    thread_id = "313dc4c9-30f2-4d6c-93ec-acbff5665712" 
-    conversation_history = mssql_saver.get_conversation_history(thread_id)
-    print(conversation_history)
+    # thread_id = "313dc4c9-30f2-4d6c-93ec-acbff5665712" 
+    # conversation_history = mssql_saver.get_conversation_history(thread_id)
+    # print(conversation_history)
     # parsed_history = mssql_saver.parse_and_print_conversation_history(conversation_history)
     # print(parsed_history)

@@ -28,25 +28,18 @@ def update_convo_state(state: dict):
                     if not state["contact_permission"]:
                         state["reason_for_decline"] = "User did not give contact permission."
                 if "credit_pull_permission" in tool_response:
-                    if not tool_response["credit_pull_permission"]:
+                    if not tool_response.get("credit_pull_permission"):
                         state["credit_pull_complete"] = False
                     state["credit_pull_permission"] = tool_response["credit_pull_permission"]
                     print(f"Updated credit_pull_permission: {state['credit_pull_permission']}")
                 if "saving_estimate" in tool_response:
                     state["savings_estimate"] = tool_response
                     print(f"Updated savings_estimate: {state['savings_estimate']}")
+                if not tool_response.get("error") and "message" in tool_response and "data" in tool_response:
+                    state["results"] = tool_response.get("data").get("results")
                 break
             except json.JSONDecodeError:
                 continue
-
-    # print("Updated state: \n")
-    # print("Required Information:", state.get("required_information").dict())
-    # print("Contact Permission:", state.get("contact_permission"))
-    # print("Credit Pull Permission:", state.get("credit_pull_permission"))
-    # print("Credit Pull Complete:", state.get("credit_pull_complete"))
-    # print("Lead Create Complete:", state.get("lead_create_complete"))
-    # print("Savings Estimate:", state.get("savings_estimate"))
-    # print("Reason for Decline:", state.get("reason_for_decline"))
     return state
 
 
